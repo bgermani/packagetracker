@@ -1,0 +1,80 @@
+version: '3'
+services:
+  db:
+    image: "mysql:8.0.30"
+    restart: always
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=admin
+      - MYSQL_USER=test
+      - MYSQL_PASSWORD=test
+      - MYSQL_DATABASE=sphdb
+    ports:
+      - 3306:3306
+    networks:
+      - backend-network
+
+  packagetracker:
+    container_name: packagetracker
+    image: packagetracker:latest
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/sphdb?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: test
+      SPRING_DATASOURCE_PASSWORD: test
+    networks:
+      - backend-network
+    depends_on:
+      - db
+    links:
+      - db:db
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+        - 5672:5672
+        - 15672:15672
+    volumes:
+        - rabbitmq_data:/var/lib/rabbitmq/
+        - rabbitmq_log:/var/log/rabbitmq/
+    networks:
+        - backend-network
+
+  # elasticsearch:
+  #   container_name: es-container
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.5.3
+  #   environment:
+  #     - xpack.security.enabled=false
+  #     - "discovery.type=single-node"
+  #   networks:
+  #     - backend-network
+  #   ports:
+  #     - 9200:9200
+
+  # kibana:
+  #   container_name: kb-container
+  #   image: docker.elastic.co/kibana/kibana:7.11.0
+  #   environment:
+  #     - ELASTICSEARCH_HOSTS=http://es-container:9200
+  #   networks:
+  #     - backend-network
+  #   depends_on:
+  #     - elasticsearch
+  #   ports:
+  #     - 5601:5601
+
+networks:
+  backend-network:
+    driver: bridge
+volumes:
+  db_data:
+    driver: local
+  rabbitmq_data:
+  rabbitmq_log:
+
