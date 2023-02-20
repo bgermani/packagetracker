@@ -1,8 +1,10 @@
-package com.bgermani.packagetracker.service;
+package com.bgermani.packagetracker.concurrency;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.bgermani.packagetracker.model.PackageStatus;
+import com.bgermani.packagetracker.service.InternalActionService;
+import com.bgermani.packagetracker.service.ShippingService;
 
 public class PackageFetchRunnable implements Runnable {
     @Autowired
@@ -11,26 +13,21 @@ public class PackageFetchRunnable implements Runnable {
     @Autowired
     InternalActionService internalActionService;
 
-    private String name = null;
+    private String packageNumber = null;
 
-    public PackageFetchRunnable(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return this.name;
+    public PackageFetchRunnable(String packageNumber) {
+        this.packageNumber = packageNumber;
     }
 
     @Override
     public void run() {
         try {
-            shippingService.fetchStatus("packageNumber");
-            internalActionService.perform("packageNumber", PackageStatus.PICKED_UP);
+            PackageStatus currentStatus = shippingService.fetchStatus(packageNumber);
+            internalActionService.perform(packageNumber, currentStatus);
             // Update Package and PackageFetchAttempt tables
         } catch (Exception e) {
             // Update PackageFetchAttempt table
             e.printStackTrace();
         }
-        System.out.println("Executing :" + name);
     }
 }

@@ -1,4 +1,4 @@
-package com.bgermani.packagetracker.service;
+package com.bgermani.packagetracker.concurrency;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -30,7 +30,7 @@ public class PackageFetchExecutor {
 
         // Remove sample loop and map existing packages that don't have PICKED_UP status
         for (int i = 1; i <= 100; i++) {
-            blockingQueue.offer(new PackageFetchRunnable("name" + i));
+            blockingQueue.offer(new PackageFetchRunnable("packageNumber"));
         }
 
         executor.shutdown();
